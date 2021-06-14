@@ -49,7 +49,7 @@ class SuperjEsApiApplicationTests {
     // 测试创建索引  CreateIndexRequest
     @Test
     void testCreateIndex() throws IOException {
-        //1.创建索引请求
+        //1.创建索引请求(索引名字不能有大写字母)
         CreateIndexRequest request = new CreateIndexRequest("superj_index");
         //2.客户端执行请求IndicesClient,请求后获得响应
         CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);

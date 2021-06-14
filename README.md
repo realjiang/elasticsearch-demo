@@ -18,3 +18,5 @@ springboot集成es demo
     - 文档相关
     
 4. 项目demo
+
+    环境:添加thymeleaf依赖.准备静态页面

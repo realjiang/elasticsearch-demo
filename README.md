@@ -21,3 +21,5 @@ springboot集成es demo
 
     环境:添加thymeleaf依赖.准备静态页面
     数据:jsoup包 - 解析网页 (tika - 解析视频)
+    
+    页面访问地址:http://localhost:9091/

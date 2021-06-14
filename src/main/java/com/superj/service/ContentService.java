@@ -10,12 +10,15 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -78,6 +81,60 @@ public class ContentService {
         ArrayList<Map<String,Object>> list = new ArrayList<>();
         for (SearchHit documentFields : response.getHits().getHits()) {
             list.add(documentFields.getSourceAsMap());
+        }
+        return list;
+    }
+
+    /**
+     * 获取数据,实现搜索功能 - 关键词高亮
+     * @param keyword 关键词
+     * @param pageNum 从第几条开始
+     * @param pageSize 查询几条
+     * @return 是否成功
+     * @throws Exception
+     */
+    public List<Map<String,Object>> searchPageHighLight(String keyword,int pageNum,int pageSize) throws Exception {
+        if (pageNum <= 1) {
+            pageNum = 1;
+        }
+        //条件搜索
+        SearchRequest request = new SearchRequest("jd_goods");
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        //分页
+        sourceBuilder.from(pageNum);
+        sourceBuilder.size(pageSize);
+        //精确匹配
+        TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery("title", keyword);
+        sourceBuilder.query(termQueryBuilder);
+        sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+        //高亮
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("title");
+        highlightBuilder.requireFieldMatch(false);//关掉多个高亮显示,只显示第一个匹配关键字
+        highlightBuilder.preTags("<span style='color:red'>");
+        highlightBuilder.postTags("</span>");
+        sourceBuilder.highlighter(highlightBuilder);
+        //执行搜索
+        request.source(sourceBuilder);
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        //解析结果
+        ArrayList<Map<String,Object>> list = new ArrayList<>();
+        for (SearchHit hit : response.getHits().getHits()) {
+            //解析高亮字段
+            //1.获取高亮字段
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            HighlightField title = highlightFields.get("title");
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();//原来的查询结果
+            //2.解析高亮字段,将原来的字段换为高亮字段即可
+            if (title != null) {
+                Text[] fragments = title.fragments();
+                String n_title = "";
+                for (Text text : fragments) {
+                    n_title += text;
+                }
+                sourceAsMap.put("title", n_title);//高亮字段替换掉原来的内容
+            }
+            list.add(hit.getSourceAsMap());
         }
         return list;
     }

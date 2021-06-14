@@ -100,7 +100,8 @@
                             </p>
                             <!--标题-->
                             <p class="productTitle">
-                                <a> {{result.title}} </a>
+                                <!--<a> {{result.title}} </a>-->
+                                <a v-html="result.title"></a>
                             </p>
                             <!-- 店铺名 -->
                             <div class="productShop">
@@ -132,10 +133,16 @@
             searchKey(){
                 const keyword = this.keyword;
                 console.log(keyword);
-                axios.get('search/'+keyword+'/1/10').then(res=>{
+                //普通搜索
+                // axios.get('search/'+keyword+'/1/10').then(res=>{
+                //     console.log(res);
+                //     this.results = res.data;
+                // });
+                //高亮版搜索
+                axios.get('search_hl/'+keyword+'/1/10').then(res=>{
                     console.log(res);
                     this.results = res.data;
-                })
+                });
             }
         }
     })
